@@ -1,10 +1,10 @@
 (in-ns 'servidor.core)
 
-(defn recebe-mensagem-tcp
+(defn recebe-tcp
   [socket]
   (.readLine (io/reader socket)))
 
-(defn envia-mensagem-tcp
+(defn envia-tcp
   [socket mensagem]
   (let [writer (io/writer socket)]
     (.write writer mensagem)
@@ -12,14 +12,26 @@
 
 (defn loop-recebimento-tcp
   "Loop que mantém o recebimento de requisições TCP"
-  [porta funcao-handler]
-  (let [executando (atom true)]
+  [porta handler]
+  (let [running (atom true)]
     (future
       (with-open [server-sock (ServerSocket. porta)]
-        (while @executando
+        (while @running
           (with-open [sock (.accept server-sock)]
-            (let [mensagem-entrada (recebe-mensagem-tcp sock)
-                  mensagem-saida (funcao-handler mensagem-entrada)]
-              (println "Enviando arquivo (encode base64)")
-              (send sock mensagem-saida))))))
-    @executando))
+            (let [msg-in (recebe-tcp sock)
+                  msg-out (handler msg-in)]
+              (envia-tcp sock msg-out))))))
+    running))
+
+(defn arquivo->base64
+  [caminho-do-arquivo]
+  "testeb64")
+
+(defn arquivo->bytes
+  [caminho-do-arquivo]
+  (let [arquivo (java.io.File. caminho-do-arquivo)
+        arry (byte-array (.length arquivo))
+        input-strm (java.io.FileInputStream. arquivo)]
+    (.read input-strm arry)
+    (.close input-strm)
+    arry))

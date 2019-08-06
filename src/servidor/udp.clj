@@ -43,13 +43,14 @@
   "Avisa o cliente que por onde será feita a transferência via UDP"
   [requisicao arquivo socket]
   (let [cliente (:endereco-origem requisicao)]
-    (println (str "Enviando endereço tcp direto para " cliente))
+    (println (str "Enviando endereço tcp (via udp) para " cliente ", arquivo " arquivo))
     (enviar-resposta-query socket arquivo cliente))
   )
 
 (defn trata-requisicao-de-busca
   "Recebe requisicao. Se o TTL > 0 inicia transferência tcp ou repassa requisição, do contrário retorna nil"
   [requisicao socket]
+  (println (str "Mensagem " requisicao " recebida no socket"))
   (let [req-mapeada (clojure.edn/read-string requisicao)
         ttl (:time-to-live req-mapeada)]
     (if (> ttl 0) 

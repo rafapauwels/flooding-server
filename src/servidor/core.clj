@@ -19,4 +19,4 @@
         socket-udp (DatagramSocket. porta)]
     (loop-atualizacao-arquivos! "/home/pauwels/Documents/Clojure")
     (loop-recebimento-requisicoes-de-busca socket-udp trata-requisicao-de-busca)
-    (loop-recebimento-tcp porta println)))
+    (loop-recebimento-tcp porta arquivo->base64)))
