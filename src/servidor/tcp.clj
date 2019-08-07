@@ -23,10 +23,6 @@
               (envia-tcp sock msg-out))))))
     running))
 
-(defn arquivo->base64
-  [caminho-do-arquivo]
-  "testeb64")
-
 (defn arquivo->bytes
   [caminho-do-arquivo]
   (let [arquivo (java.io.File. caminho-do-arquivo)
@@ -35,3 +31,8 @@
     (.read input-strm arry)
     (.close input-strm)
     arry))
+
+(defn arquivo->base64
+  [caminho-do-arquivo]
+  (println (str "Convertendo arquivo para base64: " caminho-do-arquivo))
+  (String. (b64/encode (arquivo->bytes caminho-do-arquivo))))
