@@ -1,5 +1,7 @@
 (in-ns 'servidor.core)
 
+(def lista-requisicoes (atom '()))
+
 (defn enviar-query
   "Envia uma requisição através de um socket para o alvo, definido pelo endereço e porta. Caso a mensagem ultrapasse 512 bytes
     ela será truncada"
@@ -47,22 +49,34 @@
     (enviar-resposta-query socket arquivo cliente))
   )
 
+(defn requisicao-valida?!
+  [requisicao]
+  (let [req (zipmap [:endereco-origem :query]
+                    [(:endereco-origem requisicao) (:query requisicao)])]
+    (if (= 0 (count 
+              (filter #(= req %) @lista-requisicoes)))
+      (swap! lista-requisicoes conj req)
+      nil)))
+
 (defn trata-requisicao-de-busca
   "Recebe requisicao. Se o TTL > 0 inicia transferência tcp ou repassa requisição, do contrário retorna nil"
   [requisicao socket]
   (println (str "Mensagem " requisicao " recebida no socket"))
   (let [req-mapeada (clojure.edn/read-string requisicao)
         ttl (:time-to-live req-mapeada)]
-    (if (> ttl 0) 
-      (do
-        (let [arquivo (procura-arquivo (:query req-mapeada))]
-          (println (str "Solicitação para '" (:query req-mapeada) "' recebida. TTL igual a " ttl))
-          (if arquivo
-            (do (println "Arquivo encontrado, iniciando processo de transferência")
-                (aviso-para-transferencia req-mapeada arquivo socket))
-            (do (println "Arquivo não encontrado, repassando solicitação")
-                (repassa-busca req-mapeada socket)))
-          )))))
+    (if (> ttl 0)
+      (if (requisicao-valida?! req-mapeada)
+          (do
+            (let [arquivo (procura-arquivo (:query req-mapeada))]
+              (println (str "Solicitação para '" (:query req-mapeada) "' recebida. TTL igual a " ttl))
+              (if arquivo
+                (do (println "Arquivo encontrado, iniciando processo de transferência")
+                    (aviso-para-transferencia req-mapeada arquivo socket))
+                (do (println "Arquivo não encontrado, repassando solicitação")
+                    (repassa-busca req-mapeada socket)))
+              ))
+          (println "Requisição duplicada"))
+      (println "Time to live ZERO"))))
 
 (defn recebe-requisicao
   "Bloqueante até receber uma requesição UDP através do socket especificado. Passa o payload adiante"

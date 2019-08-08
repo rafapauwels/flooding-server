@@ -21,8 +21,12 @@
            (fn [estado-atual] (map str (filter #(.isFile %) (file-seq dire)))))))
 
 (defn loop-atualizacao-arquivos!
-  "Atualiza a cada 5000ms a lista de arquivos com os dados do diretório"
+  "Atualiza a cada 10000ms a lista de arquivos com os dados do diretório"
   [diretorio]
-  (future (while true ((Thread/sleep 5000)
-                       (println "Atualizando arquivos")
-                       (atualiza-arquivos! diretorio)))))
+  (let [running (atom true)]
+    (future
+      (while @running
+        (do
+          (Thread/sleep 10000)
+          (println "Atualizando arquivos")
+          (atualiza-arquivos! diretorio))))))
