@@ -21,7 +21,7 @@
 (defn repassa-busca
   "Repassa a busca modificando seu TTL"
   [requisicao socket]
-  (let [servidor-alvo (escolhe-servidor-alvo alvos)]
+  (let [servidor-alvo (escolhe-servidor-alvo)]
     (println (str "Repassando query " (:query requisicao) " para " (:endereco-ip servidor-alvo)))
     (enviar-query socket
                   (str (diminui-ttl requisicao))
